@@ -1,0 +1,361 @@
+---
+title: "Intro al uso de {tidymodels}"
+subtitle: RLadies Santiago, Chile
+author: "Sara Acevedo"
+date: "Marzo 2020"
+output:
+  xaringan::moon_reader:
+    css: ["default", "rladies", "rladies-fonts"]
+    nature:
+      highlightStyle: github
+      highlightLines: true
+      countIncrementalSlides: true
+---
+
+##  Notas importantes antes de empezar
+
+No olviden revisar el **código de conducta**. Este es un ambiente seguro y no se tolera el acoso: https://github.com/rladies/starter-kit/wiki/Code-of-Conduct#spanish
+
+Presentaciones en Xaringan:
+* https://github.com/semiramisCJ/taller_xaringan_RLadiesMty2020 
+* https://github.com/sporella/xaringan_github
+
+El código estará disponible en GitHub: https://github.com/RladiesChile
+
+---
+##  Notas importantes antes de empezar
+
+## Plan para esta sesión: 60 min 
+
+.pull-left[ 
+Cosas que **SI** veremos hoy
+* Paquetes y sus usos
+* Funciones más importantes
+* Implementar un modelo lineal 
+* Visualización básica
+]
+.pull-right[ 
+Cosas que **NO** veremos hoy
+* Limpieza de datos avanzada
+* Modelos complejos o ensemble
+* Machine learning
+* Visualización avanzada
+]
+
+---
+##  Notas importantes antes de empezar
+
+## Si hay cosas que no entiendes del taller 
+
+.pull-left[ 
+* Es normal, quizás iremos algo rápido
+* El código y la presentación quedará disponible
+* Habrá espacios para preguntas
+]
+.pull-right[ 
+<img src="tallertidyverse_files/figure-html/pink.png" img>
+]
+
+---
+class: inverse, center, middle
+# Empecemos 
+
+<img src=https://media.giphy.com/media/lluj1cauAlO2vQEm8A/giphy.gif img>
+
+---
+
+##  Paquetes Tidymodels
+
+## 
+
+* Sintaxis tidyverse
+* Reproducibilidad de datos
+* Developer Max Kuhn {library(caret)}
+* Hoy usaremos rsample, parsnip, recipes y yardstick
+* Otros: corrr, dials, workflows, tune
+
+<img src=https://rviews.rstudio.com/post/2019-06-14-a-gentle-intro-to-tidymodels_files/figure-html/tidymodels.png img> 
+Figura: https://rviews.rstudio.com/2019/06/19/a-gentle-intro-to-tidymodels/
+---
+
+- Instalar los paquetes **tidyverse**, **tidymodels**, junto con sus dependencias
+```{r eval=FALSE, tidy=FALSE}
+install.packages(c("tidyverse", "tidymodels")), dependencies = TRUE)
+```
+
+- Instalar el paquete **remotes** y **ggsignif**, junto con sus dependencias
+```{r eval=FALSE, tidy=FALSE}
+install.packages(c("remotes", "ggsignif")), dependencies = TRUE)
+```
+
+- Instalar desde github el paquete **datos** y **corrr**
+```{r eval=FALSE, tidy=FALSE}
+remotes::install_github("cienciadedatos/datos")
+remotes::install_github("tidymodels/corrr")
+```
+
+---
+class: inverse, center, middle
+# Base de datos: pinguinos
+
+<img src=https://github.com/allisonhorst/palmerpenguins/raw/master/man/figures/lter_penguins.png img>
+Artwork by [@allison_horst](https://github.com/allisonhorst/)
+---
+# library() y glimpse()
+
+```{r message=FALSE}
+# librerias
+library(tidyverse)
+library(tidymodels)
+library(remotes)
+library(datos)
+library(ggsignif)
+library(corrr)
+# estilo ggplot
+theme_set(theme_bw())
+# cargar la database
+pinguinos <- datos::pinguinos
+# echar un vistazo
+dplyr::glimpse(pinguinos)
+```
+
+---
+##  Un poco de limpieza
+```{r}
+# arbitrariamente eliminaremos 
+pinguinos_db <-  pinguinos %>% 
+                 drop_na() %>% # las observaciones con datos ausentes
+                 select(-anio) # la columna anio
+# revisamos nuestro nuevo archivo
+glimpse(pinguinos_db)
+```
+
+---
+##  Exploramos datos visualmente
+```{r, fig.align='center',out.width = '400px' }
+pinguinos_db %>% ggplot(aes(x=largo_aleta_mm, y=masa_corporal_g,
+                        color = sexo, size =masa_corporal_g)) +
+                 geom_point(alpha=0.5) 
+```
+
+---
+##  Diferencias macho y hembra por especie
+```{r, fig.align='center', out.width = '350px' }
+pinguinos_db %>% ggplot(aes(x=sexo, y=masa_corporal_g, fill=sexo)) + 
+                        geom_boxplot() +
+                        facet_wrap(~especie) +
+                        geom_signif(comparisons = list(c("macho", "hembra")), 
+                        map_signif_level=TRUE,
+                        test = "t.test")
+    
+```
+---
+##  Correlación entre variables numéricas 
+
+```{r}
+pinguinos_db %>% 
+  select(-especie,-sexo,-isla) %>% 
+  corrr::correlate() 
+```
+---
+
+# Correlación entre variables numéricas 
+```{r, fig.align='center', out.width = '350px', message=FALSE}
+pinguinos_db %>% 
+  select(-especie,-sexo,-isla) %>% 
+  corrr::correlate() %>% 
+  rearrange() %>%  # ordena las correlaciones
+  shave() %>%# limpia las correlaciones repetidas
+  fashion()
+```
+---
+
+# Correlación entre variables numéricas 
+```{r, fig.align='center', out.width = '350px', message=FALSE}
+pinguinos_db %>% 
+  select(-especie,-sexo,-isla) %>% 
+  corrr::correlate() %>% 
+  network_plot()
+```
+---
+##  Objetivo
+* Predecir la masa corporal de un pinguino, en base a sus caracteristicas físicas
+* Interpretar los resultados que obtendremos
+---
+class: inverse, center, middle
+# Primer paso: dividir el dataset en entrenamiento y testeo
+
+<img src=https://github.com/rstudio/hex-stickers/blob/master/thumbs/rsample.png?raw=true img>
+
+https://github.com/rstudio/hex-stickers/blob/master/thumbs/rsample.png
+
+---
+##  Dividimos el dataset en 80% entrenamiento y 20% testeo
+```{r}
+set.seed(1234)
+division      <-  initial_split(data = pinguinos_db, prop = .8)
+entrenamiento <-  training(division)
+testeo        <-  testing(division)
+```
+```{r}
+nrow(entrenamiento)
+nrow(testeo)
+```
+---
+##  Balanceo de datos
+```{r}
+entrenamiento %>% count(sexo) 
+testeo        %>% count(sexo) 
+```
+---
+##  Balanceo de datos
+```{r}
+set.seed(1234)
+division      <-  initial_split(data = pinguinos_db, prop = .8, strata = sexo)
+entrenamiento <-  training(division)
+testeo        <-  testing(division)
+```
+---
+##  Balanceo de datos
+```{r}
+entrenamiento %>% count(sexo) 
+testeo        %>% count(sexo) 
+```
+
+---
+class: inverse, center, middle
+# Segundo paso: crear una receta
+
+<img src=https://github.com/rstudio/hex-stickers/blob/master/thumbs/recipes.png?raw=true img>
+
+https://github.com/rstudio/hex-stickers/blob/master/thumbs/recipes.png
+
+---
+##  Creamos una receta para usar nuestras variables
+
+```{r}
+masa_recipe <-recipe(masa_corporal_g ~ ., data = entrenamiento) %>% 
+              step_corr(all_numeric()) %>%
+              step_dummy(all_nominal()) %>% 
+              prep()
+
+masa_recipe
+```
+
+---
+##  Creamos una receta para usar nuestras variables
+
+```{r}
+entrenamiento_juice <- masa_recipe %>%
+                       juice()
+
+testeo_bake         <- masa_recipe %>%
+                       bake(testeo)
+```
+---
+##  Creamos una receta para usar nuestras variables
+
+```{r}
+head(entrenamiento_juice, 3)
+```
+
+```{r}
+head(testeo_bake, 3)        
+```
+---
+
+class: inverse, center, middle
+# Tercer paso: usar recetas y entrenar nuestros datos
+
+<img src=https://github.com/rstudio/hex-stickers/blob/master/thumbs/parsnip.png?raw=true img>
+
+https://github.com/rstudio/hex-stickers/blob/master/thumbs/parsnip.png
+
+---
+##  Creamos nuestro modelo
+
+```{r}
+modelo_lineal <- linear_reg() %>% 
+                 set_engine("lm") %>% 
+                 set_mode("regression")
+
+translate(modelo_lineal)
+```
+
+---
+class: inverse, center, middle
+# Estoy perdid@, son muchos objetos y funciones
+
+<img src=https://media.giphy.com/media/vVEjKbAUFtZzFzjYbz/giphy.gif img>
+
+---
+##  Recapitulemos
+* Datos:
+```{r eval=FALSE}
+entrenamiento #80%
+testeo #20%
+```
+* Receta: creamos datos dummies
+```{r eval=FALSE}
+masa_recipe
+```
+* Nuevos set de datos
+```{r eval=FALSE}
+entrenamiento_juice
+testeo_bake
+```
+* Creamos un modelo linear
+```{r eval=FALSE}
+modelo_lineal
+```
+
+---
+
+```{r }
+ml_ajuste <- modelo_lineal %>%
+             fit(masa_corporal_g ~ ., data = entrenamiento_juice)
+
+ml_ajuste
+```
+
+---
+```{r }
+lm_prediccion <- ml_ajuste %>%
+                 predict(testeo_bake) %>%
+                 bind_cols(testeo_bake) 
+
+lm_prediccion
+```
+---
+class: inverse, center, middle
+# Yardstick: evaluar el modelo
+
+<img src=https://github.com/rstudio/hex-stickers/blob/master/thumbs/yardstick.png?raw=true img>
+
+https://github.com/rstudio/hex-stickers/blob/master/thumbs/yardstick.png?raw=true
+
+---
+```{r }
+lm_prediccion %>% metrics(truth = masa_corporal_g, estimate = .pred)
+```
+
+---
+```{r, fig.align='center', out.width = '450px', message=FALSE}
+lm_prediccion %>%  ggplot(aes(x=masa_corporal_g, y=.pred,
+                               color=masa_corporal_g)) +
+                   geom_point(alpha=0.5) +
+                   geom_abline() +
+                   coord_equal() +
+                   ylim(c(3000,6000)) +
+                   xlim(c(3000,6000)) 
+              
+```
+---
+# Mas información, códigos y talleres
+* [Tidymodels.org](https://www.tidymodels.org/)
+* [Latin R](https://github.com/tidymodels-latam-workshops/latinR2020)
+* [Linear and Bayesian Regression Models with tidymodels package, Masumbuko Semba](https://semba-blog.netlify.app/05/11/2020/regression-with-tidymodels/)
+* [Tidymodel and glmnet, Jun Kang](https://www.jkangpathology.com/post/tidymodel-and-glmnet/)
+*https://rpubs.com/EmilOWK/tidymodels_demo
+* [Canal de youtube de Silvia Silge](https://www.youtube.com/channel/UCTTBgWyJl2HrrhQOOc710kA)
+---

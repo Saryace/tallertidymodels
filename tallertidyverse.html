@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+  <head>
+    <title>Intro al uso de {tidymodels}</title>
+    <meta charset="utf-8" />
+    <meta name="author" content="Sara Acevedo" />
+    <link href="tallertidyverse_files/remark-css-0.0.1/default.css" rel="stylesheet" />
+    <link href="tallertidyverse_files/remark-css-0.0.1/rladies.css" rel="stylesheet" />
+    <link href="tallertidyverse_files/remark-css-0.0.1/rladies-fonts.css" rel="stylesheet" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+# Intro al uso de {tidymodels}
+## RLadies Santiago, Chile
+### Sara Acevedo
+### Marzo 2020
+
+---
+
+
+##  Notas importantes antes de empezar
+
+No olviden revisar el **código de conducta**. Este es un ambiente seguro y no se tolera el acoso: https://github.com/rladies/starter-kit/wiki/Code-of-Conduct#spanish
+
+Presentaciones en Xaringan:
+* https://github.com/semiramisCJ/taller_xaringan_RLadiesMty2020 
+* https://github.com/sporella/xaringan_github
+
+El código estará disponible en GitHub: https://github.com/RladiesChile
+
+---
+##  Notas importantes antes de empezar
+
+## Plan para esta sesión: 60 min 
+
+.pull-left[ 
+Cosas que **SI** veremos hoy
+* Paquetes y sus usos
+* Funciones más importantes
+* Implementar un modelo lineal 
+* Visualización básica
+]
+.pull-right[ 
+Cosas que **NO** veremos hoy
+* Limpieza de datos avanzada
+* Modelos complejos o ensemble
+* Machine learning
+* Visualización avanzada
+]
+
+---
+##  Notas importantes antes de empezar
+
+## Si hay cosas que no entiendes del taller 
+
+.pull-left[ 
+* Es normal, quizás iremos algo rápido
+* El código y la presentación quedará disponible
+* Habrá espacios para preguntas
+]
+.pull-right[ 
+&lt;img src="tallertidyverse_files/figure-html/pink.png" img&gt;
+]
+
+---
+class: inverse, center, middle
+# Empecemos 
+
+&lt;img src=https://media.giphy.com/media/lluj1cauAlO2vQEm8A/giphy.gif img&gt;
+
+---
+
+##  Paquetes Tidymodels
+
+## 
+
+* Sintaxis tidyverse
+* Reproducibilidad de datos
+* Developer Max Kuhn {library(caret)}
+* Hoy usaremos rsample, parsnip, recipes y yardstick
+* Otros: corrr, dials, workflows, tune
+
+&lt;img src=https://rviews.rstudio.com/post/2019-06-14-a-gentle-intro-to-tidymodels_files/figure-html/tidymodels.png img&gt; 
+Figura: https://rviews.rstudio.com/2019/06/19/a-gentle-intro-to-tidymodels/
+---
+
+- Instalar los paquetes **tidyverse**, **tidymodels**, junto con sus dependencias
+
+```r
+install.packages(c("tidyverse", "tidymodels")), dependencies = TRUE)
+```
+
+- Instalar el paquete **remotes** y **ggsignif**, junto con sus dependencias
+
+```r
+install.packages(c("remotes", "ggsignif")), dependencies = TRUE)
+```
+
+- Instalar desde github el paquete **datos** y **corrr**
+
+```r
+remotes::install_github("cienciadedatos/datos")
+remotes::install_github("tidymodels/corrr")
+```
+
+---
+class: inverse, center, middle
+# Base de datos: pinguinos
+
+&lt;img src=https://github.com/allisonhorst/palmerpenguins/raw/master/man/figures/lter_penguins.png img&gt;
+Artwork by [@allison_horst](https://github.com/allisonhorst/)
+---
+# library() y glimpse()
+
+
+```r
+# librerias
+library(tidyverse)
+library(tidymodels)
+library(remotes)
+library(datos)
+library(ggsignif)
+library(corrr)
+# estilo ggplot
+theme_set(theme_bw())
+# cargar la database
+pinguinos &lt;- datos::pinguinos
+# echar un vistazo
+dplyr::glimpse(pinguinos)
+```
+
+```
+## Rows: 344
+## Columns: 8
+## $ especie         &lt;fct&gt; Adelia, Adelia, Adelia, Adelia, Adelia, Adelia, Adeli…
+## $ isla            &lt;fct&gt; Torgersen, Torgersen, Torgersen, Torgersen, Torgersen…
+## $ largo_pico_mm   &lt;dbl&gt; 39.1, 39.5, 40.3, NA, 36.7, 39.3, 38.9, 39.2, 34.1, 4…
+## $ alto_pico_mm    &lt;dbl&gt; 18.7, 17.4, 18.0, NA, 19.3, 20.6, 17.8, 19.6, 18.1, 2…
+## $ largo_aleta_mm  &lt;int&gt; 181, 186, 195, NA, 193, 190, 181, 195, 193, 190, 186,…
+## $ masa_corporal_g &lt;int&gt; 3750, 3800, 3250, NA, 3450, 3650, 3625, 4675, 3475, 4…
+## $ sexo            &lt;fct&gt; macho, hembra, hembra, NA, hembra, macho, hembra, mac…
+## $ anio            &lt;int&gt; 2007, 2007, 2007, 2007, 2007, 2007, 2007, 2007, 2007,…
+```
+
+---
+##  Un poco de limpieza
+
+```r
+# arbitrariamente eliminaremos 
+pinguinos_db &lt;-  pinguinos %&gt;% 
+                 drop_na() %&gt;% # las observaciones con datos ausentes
+                 select(-anio) # la columna anio
+# revisamos nuestro nuevo archivo
+glimpse(pinguinos_db)
+```
+
+```
+## Rows: 333
+## Columns: 7
+## $ especie         &lt;fct&gt; Adelia, Adelia, Adelia, Adelia, Adelia, Adelia, Adeli…
+## $ isla            &lt;fct&gt; Torgersen, Torgersen, Torgersen, Torgersen, Torgersen…
+## $ largo_pico_mm   &lt;dbl&gt; 39.1, 39.5, 40.3, 36.7, 39.3, 38.9, 39.2, 41.1, 38.6,…
+## $ alto_pico_mm    &lt;dbl&gt; 18.7, 17.4, 18.0, 19.3, 20.6, 17.8, 19.6, 17.6, 21.2,…
+## $ largo_aleta_mm  &lt;int&gt; 181, 186, 195, 193, 190, 181, 195, 182, 191, 198, 185…
+## $ masa_corporal_g &lt;int&gt; 3750, 3800, 3250, 3450, 3650, 3625, 4675, 3200, 3800,…
+## $ sexo            &lt;fct&gt; macho, hembra, hembra, hembra, macho, hembra, macho, …
+```
+
+---
+##  Exploramos datos visualmente
+
+```r
+pinguinos_db %&gt;% ggplot(aes(x=largo_aleta_mm, y=masa_corporal_g,
+                        color = sexo, size =masa_corporal_g)) +
+                 geom_point(alpha=0.5) 
+```
+
+&lt;img src="tallertidyverse_files/figure-html/unnamed-chunk-6-1.png" width="400px" style="display: block; margin: auto;" /&gt;
+
+---
+##  Diferencias macho y hembra por especie
+
+```r
+pinguinos_db %&gt;% ggplot(aes(x=sexo, y=masa_corporal_g, fill=sexo)) + 
+                        geom_boxplot() +
+                        facet_wrap(~especie) +
+                        geom_signif(comparisons = list(c("macho", "hembra")), 
+                        map_signif_level=TRUE,
+                        test = "t.test")
+```
+
+&lt;img src="tallertidyverse_files/figure-html/unnamed-chunk-7-1.png" width="350px" style="display: block; margin: auto;" /&gt;
+---
+##  Correlación entre variables numéricas 
+
+
+```r
+pinguinos_db %&gt;% 
+  select(-especie,-sexo,-isla) %&gt;% 
+  corrr::correlate() 
+```
+
+```
+## 
+## Correlation method: 'pearson'
+## Missing treated using: 'pairwise.complete.obs'
+```
+
+```
+## # A tibble: 4 x 5
+##   rowname         largo_pico_mm alto_pico_mm largo_aleta_mm masa_corporal_g
+##   &lt;chr&gt;                   &lt;dbl&gt;        &lt;dbl&gt;          &lt;dbl&gt;           &lt;dbl&gt;
+## 1 largo_pico_mm          NA           -0.229          0.653           0.589
+## 2 alto_pico_mm           -0.229       NA             -0.578          -0.472
+## 3 largo_aleta_mm          0.653       -0.578         NA               0.873
+## 4 masa_corporal_g         0.589       -0.472          0.873          NA
+```
+---
+
+# Correlación entre variables numéricas 
+
+```r
+pinguinos_db %&gt;% 
+  select(-especie,-sexo,-isla) %&gt;% 
+  corrr::correlate() %&gt;% 
+  rearrange() %&gt;%  # ordena las correlaciones
+  shave() %&gt;%# limpia las correlaciones repetidas
+  fashion()
+```
+
+```
+##           rowname largo_aleta_mm masa_corporal_g largo_pico_mm alto_pico_mm
+## 1  largo_aleta_mm                                                          
+## 2 masa_corporal_g            .87                                           
+## 3   largo_pico_mm            .65             .59                           
+## 4    alto_pico_mm           -.58            -.47          -.23
+```
+---
+
+# Correlación entre variables numéricas 
+
+```r
+pinguinos_db %&gt;% 
+  select(-especie,-sexo,-isla) %&gt;% 
+  corrr::correlate() %&gt;% 
+  network_plot()
+```
+
+&lt;img src="tallertidyverse_files/figure-html/unnamed-chunk-10-1.png" width="350px" style="display: block; margin: auto;" /&gt;
+---
+##  Objetivo
+* Predecir la masa corporal de un pinguino, en base a sus caracteristicas físicas
+* Interpretar los resultados que obtendremos
+---
+class: inverse, center, middle
+# Primer paso: dividir el dataset en entrenamiento y testeo
+
+&lt;img src=https://github.com/rstudio/hex-stickers/blob/master/thumbs/rsample.png?raw=true img&gt;
+
+https://github.com/rstudio/hex-stickers/blob/master/thumbs/rsample.png
+
+---
+##  Dividimos el dataset en 80% entrenamiento y 20% testeo
+
+```r
+set.seed(1234)
+division      &lt;-  initial_split(data = pinguinos_db, prop = .8)
+entrenamiento &lt;-  training(division)
+testeo        &lt;-  testing(division)
+```
+
+```r
+nrow(entrenamiento)
+```
+
+```
+## [1] 267
+```
+
+```r
+nrow(testeo)
+```
+
+```
+## [1] 66
+```
+---
+##  Balanceo de datos
+
+```r
+entrenamiento %&gt;% count(sexo) 
+```
+
+```
+## # A tibble: 2 x 2
+##   sexo       n
+## * &lt;fct&gt;  &lt;int&gt;
+## 1 hembra   126
+## 2 macho    141
+```
+
+```r
+testeo        %&gt;% count(sexo) 
+```
+
+```
+## # A tibble: 2 x 2
+##   sexo       n
+## * &lt;fct&gt;  &lt;int&gt;
+## 1 hembra    39
+## 2 macho     27
+```
+---
+##  Balanceo de datos
+
+```r
+set.seed(1234)
+division      &lt;-  initial_split(data = pinguinos_db, prop = .8, strata = sexo)
+entrenamiento &lt;-  training(division)
+testeo        &lt;-  testing(division)
+```
+---
+##  Balanceo de datos
+
+```r
+entrenamiento %&gt;% count(sexo) 
+```
+
+```
+## # A tibble: 2 x 2
+##   sexo       n
+## * &lt;fct&gt;  &lt;int&gt;
+## 1 hembra   133
+## 2 macho    135
+```
+
+```r
+testeo        %&gt;% count(sexo) 
+```
+
+```
+## # A tibble: 2 x 2
+##   sexo       n
+## * &lt;fct&gt;  &lt;int&gt;
+## 1 hembra    32
+## 2 macho     33
+```
+
+---
+class: inverse, center, middle
+# Segundo paso: crear una receta
+
+&lt;img src=https://github.com/rstudio/hex-stickers/blob/master/thumbs/recipes.png?raw=true img&gt;
+
+https://github.com/rstudio/hex-stickers/blob/master/thumbs/recipes.png
+
+---
+##  Creamos una receta para usar nuestras variables
+
+
+```r
+masa_recipe &lt;-recipe(masa_corporal_g ~ ., data = entrenamiento) %&gt;% 
+              step_corr(all_numeric()) %&gt;%
+              step_dummy(all_nominal()) %&gt;% 
+              prep()
+
+masa_recipe
+```
+
+```
+## Data Recipe
+## 
+## Inputs:
+## 
+##       role #variables
+##    outcome          1
+##  predictor          6
+## 
+## Training data contained 268 data points and no missing data.
+## 
+## Operations:
+## 
+## Correlation filter removed no terms [trained]
+## Dummy variables from especie, isla, sexo [trained]
+```
+
+---
+##  Creamos una receta para usar nuestras variables
+
+
+```r
+entrenamiento_juice &lt;- masa_recipe %&gt;%
+                       juice()
+
+testeo_bake         &lt;- masa_recipe %&gt;%
+                       bake(testeo)
+```
+---
+##  Creamos una receta para usar nuestras variables
+
+
+```r
+head(entrenamiento_juice, 3)
+```
+
+```
+## # A tibble: 3 x 9
+##   largo_pico_mm alto_pico_mm largo_aleta_mm masa_corporal_g especie_Barbijo
+##           &lt;dbl&gt;        &lt;dbl&gt;          &lt;int&gt;           &lt;int&gt;           &lt;dbl&gt;
+## 1          39.1         18.7            181            3750               0
+## 2          39.5         17.4            186            3800               0
+## 3          40.3         18              195            3250               0
+## # … with 4 more variables: especie_Papúa &lt;dbl&gt;, isla_Dream &lt;dbl&gt;,
+## #   isla_Torgersen &lt;dbl&gt;, sexo_macho &lt;dbl&gt;
+```
+
+
+```r
+head(testeo_bake, 3)        
+```
+
+```
+## # A tibble: 3 x 9
+##   largo_pico_mm alto_pico_mm largo_aleta_mm masa_corporal_g especie_Barbijo
+##           &lt;dbl&gt;        &lt;dbl&gt;          &lt;int&gt;           &lt;int&gt;           &lt;dbl&gt;
+## 1          39.3         20.6            190            3650               0
+## 2          38.9         17.8            181            3625               0
+## 3          37.7         18.7            180            3600               0
+## # … with 4 more variables: especie_Papúa &lt;dbl&gt;, isla_Dream &lt;dbl&gt;,
+## #   isla_Torgersen &lt;dbl&gt;, sexo_macho &lt;dbl&gt;
+```
+---
+
+class: inverse, center, middle
+# Tercer paso: usar recetas y entrenar nuestros datos
+
+&lt;img src=https://github.com/rstudio/hex-stickers/blob/master/thumbs/parsnip.png?raw=true img&gt;
+
+https://github.com/rstudio/hex-stickers/blob/master/thumbs/parsnip.png
+
+---
+##  Creamos nuestro modelo
+
+
+```r
+modelo_lineal &lt;- linear_reg() %&gt;% 
+                 set_engine("lm") %&gt;% 
+                 set_mode("regression")
+
+translate(modelo_lineal)
+```
+
+```
+## Linear Regression Model Specification (regression)
+## 
+## Computational engine: lm 
+## 
+## Model fit template:
+## stats::lm(formula = missing_arg(), data = missing_arg(), weights = missing_arg())
+```
+
+---
+class: inverse, center, middle
+# Estoy perdid@, son muchos objetos y funciones
+
+&lt;img src=https://media.giphy.com/media/vVEjKbAUFtZzFzjYbz/giphy.gif img&gt;
+
+---
+##  Recapitulemos
+* Datos:
+
+```r
+entrenamiento #80%
+testeo #20%
+```
+* Receta: creamos datos dummies
+
+```r
+masa_recipe
+```
+* Nuevos set de datos
+
+```r
+entrenamiento_juice
+testeo_bake
+```
+* Creamos un modelo linear
+
+```r
+modelo_lineal
+```
+
+---
+
+
+```r
+ml_ajuste &lt;- modelo_lineal %&gt;%
+             fit(masa_corporal_g ~ ., data = entrenamiento_juice)
+
+ml_ajuste
+```
+
+```
+## parsnip model object
+## 
+## Fit time:  5ms 
+## 
+## Call:
+## stats::lm(formula = masa_corporal_g ~ ., data = data)
+## 
+## Coefficients:
+##     (Intercept)    largo_pico_mm     alto_pico_mm   largo_aleta_mm  
+##        -1064.38            13.48            56.98            15.82  
+## especie_Barbijo    especie_Papúa       isla_Dream   isla_Torgersen  
+##         -204.94          1010.01           -15.61           -30.17  
+##      sexo_macho  
+##          439.81
+```
+
+---
+
+```r
+lm_prediccion &lt;- ml_ajuste %&gt;%
+                 predict(testeo_bake) %&gt;%
+                 bind_cols(testeo_bake) 
+
+lm_prediccion
+```
+
+```
+## # A tibble: 65 x 10
+##    .pred largo_pico_mm alto_pico_mm largo_aleta_mm masa_corporal_g
+##    &lt;dbl&gt;         &lt;dbl&gt;        &lt;dbl&gt;          &lt;int&gt;           &lt;int&gt;
+##  1 4054.          39.3         20.6            190            3650
+##  2 3307.          38.9         17.8            181            3625
+##  3 3796.          37.7         18.7            180            3600
+##  4 3725.          38.8         17.2            180            3800
+##  5 3219.          39.5         16.7            178            3250
+##  6 3970.          39.6         18.8            190            4600
+##  7 4159.          42.3         21.2            191            4150
+##  8 4046.          40.6         18.8            193            3800
+##  9 3306.          35.7         16.9            185            3150
+## 10 4061.          42.8         18.5            195            4250
+## # … with 55 more rows, and 5 more variables: especie_Barbijo &lt;dbl&gt;,
+## #   especie_Papúa &lt;dbl&gt;, isla_Dream &lt;dbl&gt;, isla_Torgersen &lt;dbl&gt;,
+## #   sexo_macho &lt;dbl&gt;
+```
+---
+class: inverse, center, middle
+# Yardstick: evaluar el modelo
+
+&lt;img src=https://github.com/rstudio/hex-stickers/blob/master/thumbs/yardstick.png?raw=true img&gt;
+
+https://github.com/rstudio/hex-stickers/blob/master/thumbs/yardstick.png?raw=true
+
+---
+
+```r
+lm_prediccion %&gt;% metrics(truth = masa_corporal_g, estimate = .pred)
+```
+
+```
+## # A tibble: 3 x 3
+##   .metric .estimator .estimate
+##   &lt;chr&gt;   &lt;chr&gt;          &lt;dbl&gt;
+## 1 rmse    standard     269.   
+## 2 rsq     standard       0.871
+## 3 mae     standard     221.
+```
+
+---
+
+```r
+lm_prediccion %&gt;%  ggplot(aes(x=masa_corporal_g, y=.pred,
+                               color=masa_corporal_g)) +
+                   geom_point(alpha=0.5) +
+                   geom_abline() +
+                   coord_equal() +
+                   ylim(c(3000,6000)) +
+                   xlim(c(3000,6000)) 
+```
+
+&lt;img src="tallertidyverse_files/figure-html/unnamed-chunk-28-1.png" width="450px" style="display: block; margin: auto;" /&gt;
+---
+# Mas información, códigos y talleres
+* [Tidymodels.org](https://www.tidymodels.org/)
+* [Latin R](https://github.com/tidymodels-latam-workshops/latinR2020)
+* [Linear and Bayesian Regression Models with tidymodels package, Masumbuko Semba](https://semba-blog.netlify.app/05/11/2020/regression-with-tidymodels/)
+* [Tidymodel and glmnet, Jun Kang](https://www.jkangpathology.com/post/tidymodel-and-glmnet/)
+*https://rpubs.com/EmilOWK/tidymodels_demo
+* [Canal de youtube de Silvia Silge](https://www.youtube.com/channel/UCTTBgWyJl2HrrhQOOc710kA)
+---
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+"highlightStyle": "github",
+"highlightLines": true,
+"countIncrementalSlides": true
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();
+(function() {
+  "use strict"
+  // Replace <script> tags in slides area to make them executable
+  var scripts = document.querySelectorAll(
+    '.remark-slides-area .remark-slide-container script'
+  );
+  if (!scripts.length) return;
+  for (var i = 0; i < scripts.length; i++) {
+    var s = document.createElement('script');
+    var code = document.createTextNode(scripts[i].textContent);
+    s.appendChild(code);
+    var scriptAttrs = scripts[i].attributes;
+    for (var j = 0; j < scriptAttrs.length; j++) {
+      s.setAttribute(scriptAttrs[j].name, scriptAttrs[j].value);
+    }
+    scripts[i].parentElement.replaceChild(s, scripts[i]);
+  }
+})();
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();
+// adds .remark-code-has-line-highlighted class to <pre> parent elements
+// of code chunks containing highlighted lines with class .remark-code-line-highlighted
+(function(d) {
+  const hlines = d.querySelectorAll('.remark-code-line-highlighted');
+  const preParents = [];
+  const findPreParent = function(line, p = 0) {
+    if (p > 1) return null; // traverse up no further than grandparent
+    const el = line.parentElement;
+    return el.tagName === "PRE" ? el : findPreParent(el, ++p);
+  };
+
+  for (let line of hlines) {
+    let pre = findPreParent(line);
+    if (pre && !preParents.includes(pre)) preParents.push(pre);
+  }
+  preParents.forEach(p => p.classList.add("remark-code-has-line-highlighted"));
+})(document);</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>
