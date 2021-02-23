@@ -25,7 +25,7 @@ El código estará disponible en GitHub: https://github.com/RladiesChile
 ---
 ##  Notas importantes antes de empezar
 
-## Plan para esta sesión: 60 min 
+## Plan para esta sesión:
 
 .pull-left[ 
 Cosas que **SI** veremos hoy
