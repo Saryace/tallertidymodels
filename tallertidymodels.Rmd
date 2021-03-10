@@ -50,7 +50,7 @@ Cosas que veremos hoy
 * Habrá espacios para preguntas
 ]
 .pull-right[ 
-<img src="tallertidyverse_files/figure-html/pink.png" img>
+<img src=https://1.bp.blogspot.com/-WdKQMDR7ijE/VlIm8xqINqI/AAAAAAAA404/1wWcyHthAkQ/s1600/pantera-2.gif img>
 ]
 
 ---
