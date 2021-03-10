@@ -9,6 +9,8 @@
 
 #remotes::install_github("tidymodels/corrr")
 
+#install.packages("ranger")
+
 # Librerias ---------------------------------------------------------------
 library(tidyverse)
 library(tidymodels)
@@ -113,7 +115,7 @@ masa_recipe_noprep   <-  recipe(masa_corporal_g ~ ., data = pinguinos_db) %>%
                          step_normalize(all_numeric()) %>% 
                          step_dummy(all_nominal())
 
-entrenamiento_juice_noprep <-   masa_recipe_noprep %>%
+#entrenamiento_juice_noprep <-   masa_recipe_noprep %>%
                                 juice()
 
 # Creamos nuestro modelo --------------------------------------------------
