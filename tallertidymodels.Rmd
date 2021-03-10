@@ -77,12 +77,12 @@ Figura: https://rviews.rstudio.com/2019/06/19/a-gentle-intro-to-tidymodels/
 
 - Instalar los paquetes **tidyverse**, **tidymodels**, junto con sus dependencias
 ```{r eval=FALSE, tidy=FALSE}
-install.packages(c("tidyverse", "tidymodels")), dependencies = TRUE)
+install.packages(c("tidyverse", "tidymodels"), dependencies = TRUE)
 ```
 
 - Instalar el paquete **remotes** y **ggsignif**, junto con sus dependencias
 ```{r eval=FALSE, tidy=FALSE}
-install.packages(c("remotes", "ggsignif")), dependencies = TRUE)
+install.packages(c("remotes", "ggsignif"), dependencies = TRUE)
 ```
 
 - Instalar desde github el paquete **datos** y **corrr**

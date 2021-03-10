@@ -1,9 +1,9 @@
 
 # Instalacion paquetes ----------------------------------------------------
 
-#install.packages(c("tidyverse", "tidymodels")), dependencies = TRUE)
+#install.packages(c("tidyverse", "tidymodels"), dependencies = TRUE)
 
-#install.packages(c("remotes", "ggsignif")), dependencies = TRUE)
+#install.packages(c("remotes", "ggsignif"), dependencies = TRUE)
 
 #remotes::install_github("cienciadedatos/datos")
 
