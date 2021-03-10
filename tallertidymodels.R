@@ -116,7 +116,7 @@ masa_recipe_noprep   <-  recipe(masa_corporal_g ~ ., data = pinguinos_db) %>%
                          step_dummy(all_nominal())
 
 #entrenamiento_juice_noprep <-   masa_recipe_noprep %>%
-                                juice()
+                                #juice()
 
 # Creamos nuestro modelo --------------------------------------------------
 
