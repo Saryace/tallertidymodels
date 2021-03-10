@@ -20,7 +20,9 @@ Presentaciones en Xaringan:
 * https://github.com/semiramisCJ/taller_xaringan_RLadiesMty2020 
 * https://github.com/sporella/xaringan_github
 
-El código estará disponible en GitHub: https://github.com/RladiesChile
+El código estará disponible en GitHub: https://github.com/Saryace
+
+Mis redes: twitter: @saryace instagram lab: @soilbiophysics twitter lab: @soilbiophysics1
 
 ---
 ##  Notas importantes antes de empezar
@@ -28,18 +30,13 @@ El código estará disponible en GitHub: https://github.com/RladiesChile
 ## Plan para esta sesión:
 
 .pull-left[ 
-Cosas que **SI** veremos hoy
+Cosas que veremos hoy
 * Paquetes y sus usos
 * Funciones más importantes
 * Implementar un modelo lineal 
 * Visualización básica
 ]
 .pull-right[ 
-Cosas que **NO** veremos hoy
-* Limpieza de datos avanzada
-* Modelos complejos o ensemble
-* Machine learning
-* Visualización avanzada
 ]
 
 ---
@@ -202,27 +199,6 @@ nrow(entrenamiento)
 nrow(testeo)
 ```
 ---
-##  Balanceo de datos
-```{r}
-entrenamiento %>% count(sexo) 
-testeo        %>% count(sexo) 
-```
----
-##  Balanceo de datos
-```{r}
-set.seed(1234)
-division      <-  initial_split(data = pinguinos_db, prop = .8, strata = sexo)
-entrenamiento <-  training(division)
-testeo        <-  testing(division)
-```
----
-##  Balanceo de datos
-```{r}
-entrenamiento %>% count(sexo) 
-testeo        %>% count(sexo) 
-```
-
----
 class: inverse, center, middle
 # Segundo paso: crear una receta
 
@@ -346,8 +322,8 @@ lm_prediccion %>%  ggplot(aes(x=masa_corporal_g, y=.pred,
                    geom_point(alpha=0.5) +
                    geom_abline() +
                    coord_equal() +
-                   ylim(c(3000,6000)) +
-                   xlim(c(3000,6000)) 
+                   ylim(c(2000,6000)) +
+                   xlim(c(2000,6000)) 
               
 ```
 ---
