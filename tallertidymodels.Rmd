@@ -332,6 +332,5 @@ lm_prediccion %>%  ggplot(aes(x=masa_corporal_g, y=.pred,
 * [Latin R](https://github.com/tidymodels-latam-workshops/latinR2020)
 * [Linear and Bayesian Regression Models with tidymodels package, Masumbuko Semba](https://semba-blog.netlify.app/05/11/2020/regression-with-tidymodels/)
 * [Tidymodel and glmnet, Jun Kang](https://www.jkangpathology.com/post/tidymodel-and-glmnet/)
-*https://rpubs.com/EmilOWK/tidymodels_demo
 * [Canal de youtube de Silvia Silge](https://www.youtube.com/channel/UCTTBgWyJl2HrrhQOOc710kA)
 ---

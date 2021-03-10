@@ -142,8 +142,8 @@ rf_prediccion <- rf_ajuste %>%
                  predict(testeo_bake) %>%
                  bind_cols(testeo_bake) 
 
-
 # Metricas ----------------------------------------------------------------
+
 
 lm_prediccion %>% metrics(truth = masa_corporal_g, estimate = .pred)
 
